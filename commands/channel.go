@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/mattermost/mmctl/client"
+	"github.com/mattermost/mmctl/commands/comp"
 	"github.com/mattermost/mmctl/printer"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -76,9 +77,10 @@ var ListChannelsCmd = &cobra.Command{
 	Long: `List all channels on specified teams.
 Archived channels are appended with ' (archived)'.
 Private channels the user is a member of or has access to are appended with ' (private)'.`,
-	Example: "  channel list myteam",
-	Args:    cobra.MinimumNArgs(1),
-	RunE:    withClient(listChannelsCmdF),
+	Example:           "  channel list myteam",
+	Args:              cobra.MinimumNArgs(1),
+	ValidArgsFunction: argsCompletionWithClient(comp.Teams),
+	RunE:              withClient(listChannelsCmdF),
 }
 
 var ModifyChannelCmd = &cobra.Command{
