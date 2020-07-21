@@ -79,7 +79,7 @@ Archived channels are appended with ' (archived)'.
 Private channels the user is a member of or has access to are appended with ' (private)'.`,
 	Example:           "  channel list myteam",
 	Args:              cobra.MinimumNArgs(1),
-	ValidArgsFunction: argsCompletionWithClient(comp.Teams),
+	ValidArgsFunction: compWithClient(comp.Teams),
 	RunE:              withClient(listChannelsCmdF),
 }
 
@@ -148,6 +148,7 @@ func init() {
 	ChannelCreateCmd.Flags().String("name", "", "Channel Name")
 	ChannelCreateCmd.Flags().String("display_name", "", "Channel Display Name")
 	ChannelCreateCmd.Flags().String("team", "", "Team name or ID")
+	_ = ChannelCreateCmd.RegisterFlagCompletionFunc("team", compWithClient(comp.Teams))
 	ChannelCreateCmd.Flags().String("header", "", "Channel header")
 	ChannelCreateCmd.Flags().String("purpose", "", "Channel purpose")
 	ChannelCreateCmd.Flags().Bool("private", false, "Create a private channel.")

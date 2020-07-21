@@ -79,7 +79,7 @@ func withClient(fn func(client.Client, *cobra.Command, []string) error) func(*co
 	}
 }
 
-func argsCompletionWithClient(fn func(client.Client, *cobra.Command, []string, string) ([]string, cobra.ShellCompDirective)) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+func compWithClient(fn func(client.Client, *cobra.Command, []string, string) ([]string, cobra.ShellCompDirective)) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
 	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		c, err := getClient(cmd)
 		if err != nil {

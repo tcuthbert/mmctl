@@ -49,7 +49,7 @@ var PluginDeleteCmd = &cobra.Command{
 	Example:           `  plugin delete hovercardexample pluginexample`,
 	RunE:              withClient(pluginDeleteCmdF),
 	Args:              cobra.MinimumNArgs(1),
-	ValidArgsFunction: argsCompletionWithClient(comp.InstalledPlugins),
+	ValidArgsFunction: compWithClient(comp.InstalledPlugins),
 }
 
 var PluginEnableCmd = &cobra.Command{
@@ -59,7 +59,7 @@ var PluginEnableCmd = &cobra.Command{
 	Example:           `  plugin enable hovercardexample pluginexample`,
 	RunE:              withClient(pluginEnableCmdF),
 	Args:              cobra.MinimumNArgs(1),
-	ValidArgsFunction: argsCompletionWithClient(comp.DisabledPlugins),
+	ValidArgsFunction: compWithClient(comp.DisabledPlugins),
 }
 
 var PluginDisableCmd = &cobra.Command{
@@ -69,7 +69,7 @@ var PluginDisableCmd = &cobra.Command{
 	Example:           `  plugin disable hovercardexample pluginexample`,
 	RunE:              withClient(pluginDisableCmdF),
 	Args:              cobra.MinimumNArgs(1),
-	ValidArgsFunction: argsCompletionWithClient(comp.EnabledPlugins),
+	ValidArgsFunction: compWithClient(comp.EnabledPlugins),
 }
 
 var PluginListCmd = &cobra.Command{
