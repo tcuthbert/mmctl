@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/mattermost/mmctl/client"
+	"github.com/mattermost/mmctl/commands/comp"
 	"github.com/mattermost/mmctl/printer"
 
 	"github.com/pkg/errors"
@@ -50,21 +51,23 @@ var PluginDeleteCmd = &cobra.Command{
 }
 
 var PluginEnableCmd = &cobra.Command{
-	Use:     "enable [plugins]",
-	Short:   "Enable plugins",
-	Long:    "Enable plugins for use on your Mattermost server.",
-	Example: `  plugin enable hovercardexample pluginexample`,
-	RunE:    withClient(pluginEnableCmdF),
-	Args:    cobra.MinimumNArgs(1),
+	Use:               "enable [plugins]",
+	Short:             "Enable plugins",
+	Long:              "Enable plugins for use on your Mattermost server.",
+	Example:           `  plugin enable hovercardexample pluginexample`,
+	RunE:              withClient(pluginEnableCmdF),
+	Args:              cobra.MinimumNArgs(1),
+	ValidArgsFunction: argsCompletionWithClient(comp.DisabledPlugins),
 }
 
 var PluginDisableCmd = &cobra.Command{
-	Use:     "disable [plugins]",
-	Short:   "Disable plugins",
-	Long:    "Disable plugins. Disabled plugins are immediately removed from the user interface and logged out of all sessions.",
-	Example: `  plugin disable hovercardexample pluginexample`,
-	RunE:    withClient(pluginDisableCmdF),
-	Args:    cobra.MinimumNArgs(1),
+	Use:               "disable [plugins]",
+	Short:             "Disable plugins",
+	Long:              "Disable plugins. Disabled plugins are immediately removed from the user interface and logged out of all sessions.",
+	Example:           `  plugin disable hovercardexample pluginexample`,
+	RunE:              withClient(pluginDisableCmdF),
+	Args:              cobra.MinimumNArgs(1),
+	ValidArgsFunction: argsCompletionWithClient(comp.EnabledPlugins),
 }
 
 var PluginListCmd = &cobra.Command{

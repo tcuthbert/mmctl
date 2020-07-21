@@ -7,6 +7,7 @@ import (
 	"github.com/mattermost/mattermost-server/v5/model"
 
 	"github.com/mattermost/mmctl/client"
+	"github.com/mattermost/mmctl/commands/comp"
 	"github.com/mattermost/mmctl/printer"
 
 	"github.com/pkg/errors"
@@ -19,12 +20,13 @@ var PluginMarketplaceCmd = &cobra.Command{
 }
 
 var PluginMarketplaceInstallCmd = &cobra.Command{
-	Use:     "install <id> <version>",
-	Short:   "Install a plugin from the marketplace",
-	Long:    "Installs a plugin listed in the marketplace server",
-	Example: "  $ mmctl plugin marketplace install jitsi 2.0.0",
-	Args:    cobra.ExactArgs(2),
-	RunE:    withClient(pluginMarketplaceInstallCmdF),
+	Use:               "install <id> <version>",
+	Short:             "Install a plugin from the marketplace",
+	Long:              "Installs a plugin listed in the marketplace server",
+	Example:           "  $ mmctl plugin marketplace install jitsi 2.0.0",
+	Args:              cobra.ExactArgs(2),
+	ValidArgsFunction: argsCompletionWithClient(comp.MarketplacePlugins),
+	RunE:              withClient(pluginMarketplaceInstallCmdF),
 }
 
 var PluginMarketplaceListCmd = &cobra.Command{

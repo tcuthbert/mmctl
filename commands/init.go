@@ -39,30 +39,55 @@ func CheckVersionMatch(version, serverVersion string) bool {
 	return maj == srvMaj && min == srvMin
 }
 
-func withClient(fn func(c client.Client, cmd *cobra.Command, args []string) error) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		if viper.GetBool("local") {
-			c, err := InitUnixClient(viper.GetString("local-socket-path"))
-			if err != nil {
-				return err
-			}
-			return fn(c, cmd, args)
-		}
+func getClient(cmd *cobra.Command) (client.Client, error) {
+	localE := viper.GetBool("local")
+	localF, _ := cmd.Flags().GetBool("local")
+	local := localE || localF
 
-		c, serverVersion, err := InitClient(viper.GetBool("insecure-sha1-intermediate"))
+	if local {
+		c, err := InitUnixClient(viper.GetString("local-socket-path"))
+		if err != nil {
+			return nil, err
+		}
+		return c, nil
+	}
+
+	c, serverVersion, err := InitClient(viper.GetBool("insecure-sha1-intermediate"))
+	if err != nil {
+		return nil, err
+	}
+	valid := CheckVersionMatch(Version, serverVersion)
+	if !valid {
+		if viper.GetBool("strict") {
+			printer.PrintError("ERROR: server version " + serverVersion + " doesn't match with mmctl version " + Version + ". Strict flag is set, so the command will not be run")
+			os.Exit(1)
+		}
+		printer.PrintError("WARNING: server version " + serverVersion + " doesn't match mmctl version " + Version)
+	}
+
+	return c, nil
+}
+
+func withClient(fn func(client.Client, *cobra.Command, []string) error) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		c, err := getClient(cmd)
 		if err != nil {
 			return err
 		}
-		valid := CheckVersionMatch(Version, serverVersion)
-		if !valid {
-			if viper.GetBool("strict") {
-				printer.PrintError("ERROR: server version " + serverVersion + " doesn't match with mmctl version " + Version + ". Strict flag is set, so the command will not be run")
-				os.Exit(1)
-			}
-			printer.PrintError("WARNING: server version " + serverVersion + " doesn't match mmctl version " + Version)
-		}
 
 		return fn(c, cmd, args)
+	}
+}
+
+func argsCompletionWithClient(fn func(client.Client, *cobra.Command, []string, string) ([]string, cobra.ShellCompDirective)) func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		c, err := getClient(cmd)
+		if err != nil {
+			printer.PrintError("couldn't initialize client: " + err.Error())
+			os.Exit(1)
+		}
+
+		return fn(c, cmd, args, toComplete)
 	}
 }
 
