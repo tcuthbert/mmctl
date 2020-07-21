@@ -14,6 +14,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func InstalledPlugins(c client.Client, cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	pluginsResp, res := c.GetPlugins()
+	if res.Error != nil {
+		fmt.Fprintf(os.Stderr, "unable to list plugins. Error: %s", res.Error)
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+
+	ids := []string{}
+	for _, plugin := range pluginsResp.Active {
+		ids = append(ids, plugin.Manifest.Id)
+	}
+	for _, plugin := range pluginsResp.Inactive {
+		ids = append(ids, plugin.Manifest.Id)
+	}
+
+	return filterArgs(args, ids), cobra.ShellCompDirectiveNoFileComp
+}
+
 func EnabledPlugins(c client.Client, cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	pluginsResp, res := c.GetPlugins()
 	if res.Error != nil {

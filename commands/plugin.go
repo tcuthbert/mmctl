@@ -42,12 +42,13 @@ var PluginInstallURLCmd = &cobra.Command{
 }
 
 var PluginDeleteCmd = &cobra.Command{
-	Use:     "delete [plugins]",
-	Short:   "Delete plugins",
-	Long:    "Delete previously uploaded plugins from your Mattermost server.",
-	Example: `  plugin delete hovercardexample pluginexample`,
-	RunE:    withClient(pluginDeleteCmdF),
-	Args:    cobra.MinimumNArgs(1),
+	Use:               "delete [plugins]",
+	Short:             "Delete plugins",
+	Long:              "Delete previously uploaded plugins from your Mattermost server.",
+	Example:           `  plugin delete hovercardexample pluginexample`,
+	RunE:              withClient(pluginDeleteCmdF),
+	Args:              cobra.MinimumNArgs(1),
+	ValidArgsFunction: argsCompletionWithClient(comp.InstalledPlugins),
 }
 
 var PluginEnableCmd = &cobra.Command{
