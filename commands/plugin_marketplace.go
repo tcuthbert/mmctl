@@ -30,9 +30,9 @@ var PluginMarketplaceInstallCmd = &cobra.Command{
 
   # if you don't specify the version, the latest one will be installed
   $ mmctl plugin marketplace install jitsi`,
-	Args: cobra.MinimumNArgs(1),
+	Args:              cobra.MinimumNArgs(1),
 	ValidArgsFunction: argsCompletionWithClient(comp.MarketplacePlugins),
-	RunE: withClient(pluginMarketplaceInstallCmdF),
+	RunE:              withClient(pluginMarketplaceInstallCmdF),
 }
 
 var PluginMarketplaceListCmd = &cobra.Command{

@@ -4,6 +4,7 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/mattermost/mmctl/client"
@@ -177,6 +178,7 @@ func pluginListCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 			printer.PrintT("{{.Manifest.Id}}: {{.Manifest.Name}}, Version: {{.Manifest.Version}}", plugin)
 		}
 
+		fmt.Println("") // Print a line to sepparate both outputs
 		printer.Print("Listing disabled plugins")
 		for _, plugin := range pluginsResp.Inactive {
 			printer.PrintT("{{.Manifest.Id}}: {{.Manifest.Name}}, Version: {{.Manifest.Version}}", plugin)
