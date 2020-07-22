@@ -162,6 +162,7 @@ func init() {
 	RemoveChannelUsersCmd.Flags().Bool("all-users", false, "Remove all users from the indicated channel.")
 
 	SearchChannelCmd.Flags().String("team", "", "Team name or ID")
+	_ = SearchChannelCmd.RegisterFlagCompletionFunc("team", compWithClient(comp.Teams))
 
 	ChannelCmd.AddCommand(
 		ChannelCreateCmd,
