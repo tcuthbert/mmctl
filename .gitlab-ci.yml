@@ -4,7 +4,7 @@ stages:
 
 include:
   project: mattermost/ci/mmctl
-  ref: master
+  ref: DOPS-240
   file: private.yml
 
 docs:
@@ -68,18 +68,3 @@ lint:
     - exit $(docker inspect server --format='{{.State.ExitCode}}')
   except:
     - tags
-
-build:
-  stage: test
-  image: $CI_REGISTRY/mattermost/ci/images/mattermost-build-server:20201020_golang-1.14.9
-  script:
-    - make package
-  artifacts:
-    paths:
-      - build
-    expire_in: 3 hours
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "master"'
-    - if: '$CI_COMMIT_REF_NAME =~ /^v.*\d/' # release
-    - if: '$CI_COMMIT_REF_NAME =~ /^v.*\D{3,}/' # -rc
-    - if: '$CI_COMMIT_REF_NAME =~ /^release-/'
