@@ -28,12 +28,12 @@ lint:
   except:
     - tags
 
-.test:
+test:
   stage: test
-  image: $CI_REGISTRY/mattermost/ci/images/mattermost-build-docker:19.03.12-1
+  image: $CI_REGISTRY/mattermost/ci/images/mattermost-build-docker:19.03.14-dind-1
   services:
-    - name: $CI_REGISTRY/mattermost/ci/images/docker-dind:19.03.12-1
-      alias: docker
+    - name: $CI_REGISTRY/mattermost/ci/images/docker-dind:19.03.14-1
+      alias: docker  
   variables:
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375/
@@ -42,9 +42,11 @@ lint:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
     - docker-compose version
+    - docker version
     - cd ..
     - git clone -b $CI_COMMIT_REF_NAME https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_NAMESPACE}/mattermost-server.git || git clone -b master https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_NAMESPACE}/mattermost-server.git
     - cd mattermost-server/build
+    - docker info
     - docker-compose --no-ansi run --rm start_dependencies
     - cat ../tests/test-data.ldif | docker-compose --no-ansi exec -T openldap bash -c 'ldapadd -x -D "cn=admin,dc=mm,dc=test,dc=com" -w mostest';
     - docker-compose --no-ansi exec -T minio sh -c 'mkdir -p /data/mattermost-test';
@@ -66,6 +68,8 @@ lint:
         bash -c 'ulimit -n 8096; ls -al; make test-all'
     - docker logs -f server
     - exit $(docker inspect server --format='{{.State.ExitCode}}')
+  after_script:
+    - docker logs build_mysql_1
   except:
     - tags
 
