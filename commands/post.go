@@ -6,6 +6,7 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/mattermost/mattermost-server/v6/model"
 
@@ -43,6 +44,7 @@ func init() {
 	PostCreateCmd.Flags().StringP("reply-to", "r", "", "Post id to reply to")
 
 	PostListCmd.Flags().IntP("number", "n", 20, "Number of messages to list")
+	PostListCmd.Flags().StringP("since", "s", "", "Filter posts from RFC3339 formatted time string")
 	PostListCmd.Flags().BoolP("show-ids", "i", false, "Show posts ids")
 	PostListCmd.Flags().BoolP("follow", "f", false, "Output appended data as new messages are posted to the channel")
 
@@ -141,10 +143,20 @@ func postListCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 	}
 
 	number, _ := cmd.Flags().GetInt("number")
+	since, _ := cmd.Flags().GetString("since")
 	showIds, _ := cmd.Flags().GetBool("show-ids")
 	follow, _ := cmd.Flags().GetBool("follow")
 
-	postList, _, err := c.GetPostsForChannel(channel.Id, 0, number, "", false)
+	postList, _, err := func(s string) (*model.PostList, *model.Response, error) {
+		if len(s) > 0 {
+			t, err := time.Parse("2006-01-02T15:04:05-07:00", s)
+			if err != nil {
+				return nil, nil, fmt.Errorf("problem parsing time string (%s): %v", s, err)
+			}
+			return c.GetPostsSince(channel.Id, t.UTC().UnixMilli(), false)
+		}
+		return c.GetPostsForChannel(channel.Id, 0, number, "", false)
+	}(since)
 	if err != nil {
 		return err
 	}

@@ -42,6 +42,7 @@ type Client interface {
 	GetPost(postId string, etag string) (*model.Post, *model.Response, error)
 	CreatePost(post *model.Post) (*model.Post, *model.Response, error)
 	GetPostsForChannel(channelId string, page, perPage int, etag string, collapsedThreads bool) (*model.PostList, *model.Response, error)
+	GetPostsSince(channelId string, time int64, collapsedThreads bool) (*model.PostList, *model.Response, error)
 	DoAPIPost(url string, data string) (*http.Response, error)
 	GetLdapGroups() ([]*model.Group, *model.Response, error)
 	GetGroupsByChannel(channelId string, groupOpts model.GroupSearchOpts) ([]*model.GroupWithSchemeAdmin, int, *model.Response, error)
