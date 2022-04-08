@@ -149,9 +149,9 @@ func postListCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 
 	postList, _, err := func(s string) (*model.PostList, *model.Response, error) {
 		if len(s) > 0 {
-			t, err := time.Parse("2006-01-02T15:04:05-07:00", s)
+			t, err := time.Parse(time.RFC3339, s)
 			if err != nil {
-				return nil, nil, fmt.Errorf("problem parsing time string (%s): %v", s, err)
+				return nil, nil, fmt.Errorf("problem parsing time string: %v", err)
 			}
 			return c.GetPostsSince(channel.Id, t.UTC().UnixMilli(), false)
 		}
