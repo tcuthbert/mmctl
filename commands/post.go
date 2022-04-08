@@ -112,7 +112,7 @@ func eventDataToPost(eventData map[string]interface{}) (*model.Post, error) {
 	return post, nil
 }
 
-func printPost(c client.Client, post *model.Post, usernames map[string]string, showIds bool) {
+func printPost(c client.Client, post *model.Post, usernames map[string]string, post_time string, showIds bool) {
 	var username string
 
 	if usernames[post.UserId] != "" {
@@ -128,9 +128,9 @@ func printPost(c client.Client, post *model.Post, usernames map[string]string, s
 	}
 
 	if showIds {
-		printer.PrintT(fmt.Sprintf("\u001b[31m%s\u001b[0m \u001b[34;1m[%s]\u001b[0m {{.Message}}", post.Id, username), post)
+		printer.PrintT(fmt.Sprintf("\u001b[31m%s\u001b[0m \u001b[0m \u001b[34;1m[%s] \u001b[31m%s::\u001b[0m \u001b[0m {{.Message}}", post.Id, username, post_time), post)
 	} else {
-		printer.PrintT(fmt.Sprintf("\u001b[34;1m[%s]\u001b[0m {{.Message}}", username), post)
+		printer.PrintT(fmt.Sprintf("\u001b\u001b[34;1m[%s] \u001b[31m%s::\u001b[0m \u001b[0m {{.Message}}", username, post_time), post)
 	}
 }
 
@@ -165,7 +165,9 @@ func postListCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 	usernames := map[string]string{}
 	for i := 1; i <= len(posts); i++ {
 		post := posts[len(posts)-i]
-		printPost(c, post, usernames, showIds)
+		t := time.UnixMilli(post.CreateAt).UTC()
+		post_time := t.Format("2006-01-02 15:04:05")
+		printPost(c, post, usernames, post_time, showIds)
 	}
 
 	if follow {
@@ -184,11 +186,13 @@ func postListCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 			event := <-ws.EventChannel
 			if event.EventType() == model.WebsocketEventPosted {
 				post, err := eventDataToPost(event.GetData())
+				t := time.UnixMilli(post.CreateAt).UTC()
+				post_time := t.Format("2006-01-02 15:04:05")
 				if err != nil {
 					fmt.Println("Error parsing incoming post: " + err.Error())
 				}
 				if post.ChannelId == channel.Id {
-					printPost(c, post, usernames, showIds)
+					printPost(c, post, usernames, post_time, showIds)
 				}
 			}
 		}
