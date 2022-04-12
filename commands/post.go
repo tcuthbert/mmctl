@@ -6,6 +6,7 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/mattermost/mattermost-server/v6/model"
 
@@ -14,6 +15,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+)
+
+const (
+	ISO8601       = "2006-01-02T15:04:05-07:00" // $ date -Is
+	PrettyISO8601 = "2006-01-02 15:04:05"
 )
 
 var PostCmd = &cobra.Command{
@@ -43,6 +49,7 @@ func init() {
 	PostCreateCmd.Flags().StringP("reply-to", "r", "", "Post id to reply to")
 
 	PostListCmd.Flags().IntP("number", "n", 20, "Number of messages to list")
+	PostListCmd.Flags().StringP("since", "s", "", "Filter posts from ISO 8601 formatted time string")
 	PostListCmd.Flags().BoolP("show-ids", "i", false, "Show posts ids")
 	PostListCmd.Flags().BoolP("follow", "f", false, "Output appended data as new messages are posted to the channel")
 
@@ -110,7 +117,7 @@ func eventDataToPost(eventData map[string]interface{}) (*model.Post, error) {
 	return post, nil
 }
 
-func printPost(c client.Client, post *model.Post, usernames map[string]string, showIds bool) {
+func printPost(c client.Client, post *model.Post, usernames map[string]string, postTime string, showIds bool) {
 	var username string
 
 	if usernames[post.UserId] != "" {
@@ -126,9 +133,9 @@ func printPost(c client.Client, post *model.Post, usernames map[string]string, s
 	}
 
 	if showIds {
-		printer.PrintT(fmt.Sprintf("\u001b[31m%s\u001b[0m \u001b[34;1m[%s]\u001b[0m {{.Message}}", post.Id, username), post)
+		printer.PrintT(fmt.Sprintf("\u001b[31m%s\u001b[0m \u001b[37;1m%s::\u001b[0m\u001b[0m \u001b[34;1m[%s]\u001b[0m {{.Message}}", post.Id, postTime, username), post)
 	} else {
-		printer.PrintT(fmt.Sprintf("\u001b[34;1m[%s]\u001b[0m {{.Message}}", username), post)
+		printer.PrintT(fmt.Sprintf("\u001b[0m \u001b[37;1m%s::\u001b[0m\u001b[0m \u001b[34;1m[%s]\u001b[0m {{.Message}}", postTime, username), post)
 	}
 }
 
@@ -142,9 +149,19 @@ func postListCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 
 	number, _ := cmd.Flags().GetInt("number")
 	showIds, _ := cmd.Flags().GetBool("show-ids")
+	since, _ := cmd.Flags().GetString("since")
 	follow, _ := cmd.Flags().GetBool("follow")
 
-	postList, _, err := c.GetPostsForChannel(channel.Id, 0, number, "", false)
+	postList, _, err := func(s string) (*model.PostList, *model.Response, error) {
+		if len(s) > 0 {
+			t, err := time.Parse(ISO8601, s)
+			if err != nil {
+				return nil, nil, fmt.Errorf("problem parsing time string: %v", err)
+			}
+			return c.GetPostsSince(channel.Id, t.UTC().UnixMilli(), false)
+		}
+		return c.GetPostsForChannel(channel.Id, 0, number, "", false)
+	}(since)
 	if err != nil {
 		return err
 	}
@@ -153,7 +170,9 @@ func postListCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 	usernames := map[string]string{}
 	for i := 1; i <= len(posts); i++ {
 		post := posts[len(posts)-i]
-		printPost(c, post, usernames, showIds)
+		t := time.UnixMilli(post.CreateAt).UTC()
+		postTime := t.Format(PrettyISO8601)
+		printPost(c, post, usernames, postTime, showIds)
 	}
 
 	if follow {
@@ -172,11 +191,13 @@ func postListCmdF(c client.Client, cmd *cobra.Command, args []string) error {
 			event := <-ws.EventChannel
 			if event.EventType() == model.WebsocketEventPosted {
 				post, err := eventDataToPost(event.GetData())
+				t := time.UnixMilli(post.CreateAt).UTC()
+				postTime := t.Format(PrettyISO8601)
 				if err != nil {
 					fmt.Println("Error parsing incoming post: " + err.Error())
 				}
 				if post.ChannelId == channel.Id {
-					printPost(c, post, usernames, showIds)
+					printPost(c, post, usernames, postTime, showIds)
 				}
 			}
 		}

@@ -1031,6 +1031,11 @@ func (m *MockClient) GetPostsForChannel(arg0 string, arg1, arg2 int, arg3 string
 	return ret0, ret1, ret2
 }
 
+// GetPostsSince mocks base method
+func (m *MockClient) GetPostsSince(arg0 string, arg1 int64, arg2 bool) (*model.PostList, *model.Response, error) {
+	return &model.PostList{}, &model.Response{}, nil
+}
+
 // GetPostsForChannel indicates an expected call of GetPostsForChannel
 func (mr *MockClientMockRecorder) GetPostsForChannel(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
